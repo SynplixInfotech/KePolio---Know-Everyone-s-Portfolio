@@ -24,7 +24,16 @@ const FirebaseConfig = (() => {
     // Initialize Firebase
     const app = firebase.initializeApp(config);
     const auth = firebase.auth();
-    const db = firebase.firestore({ cache: { synchronizeTabs: true } });
+    const db = firebase.firestore();
+
+    // Enable offline persistence (optional, improves UX)
+    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+        if (err.code === 'failed-precondition') {
+            console.warn('Firestore persistence failed: multiple tabs open.');
+        } else if (err.code === 'unimplemented') {
+            console.warn('Firestore persistence not supported in this browser.');
+        }
+    });
 
     return { app, auth, db };
 })();
