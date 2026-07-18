@@ -6,6 +6,17 @@
     'use strict';
 
     const { $ } = Dashboard;
+    let editingQualId = null;
+
+    function resetForm() {
+        $('#qualDegree').value = '';
+        $('#qualInstitution').value = '';
+        $('#qualYear').value = '';
+        $('#qualGrade').value = '';
+        editingQualId = null;
+        const addBtn = $('#addQualBtn');
+        addBtn.innerHTML = 'Add Qualification';
+    }
 
     Dashboard.loadQualifications = async function () {
         const quals = await DataService.getQualifications();
@@ -44,10 +55,27 @@
                     </div>
                 </div>
                 <div class="qual-row__actions">
+                    <button class="btn btn--secondary btn--small" data-edit-qual="${q.id}" title="Edit">✏️ Edit</button>
                     <button class="btn btn--danger btn--small" data-delete-qual="${q.id}">Delete</button>
                 </div>
             </div>
         `).join('');
+
+        list.querySelectorAll('[data-edit-qual]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const qual = quals.find(q => q.id === btn.dataset.editQual);
+                if (!qual) return;
+                editingQualId = qual.id;
+                $('#qualDegree').value = qual.degree;
+                $('#qualInstitution').value = qual.institution;
+                $('#qualYear').value = qual.year || '';
+                $('#qualGrade').value = qual.grade || '';
+                const addBtn = $('#addQualBtn');
+                addBtn.innerHTML = 'Update Qualification';
+                addBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $('#qualDegree').focus();
+            });
+        });
 
         Dashboard.attachInlineDelete({
             listEl: list,
@@ -63,8 +91,6 @@
         $('#addQualBtn')?.addEventListener('click', async () => {
             const addBtn = $('#addQualBtn');
             if (addBtn.disabled) return;
-            addBtn.disabled = true;
-            addBtn.innerHTML = '<span class="spinner"></span> Adding...';
 
             const degree = $('#qualDegree').value.trim();
             const institution = $('#qualInstitution').value.trim();
@@ -74,24 +100,27 @@
             const errors = ValidationUtils.validateQualification({ degree, institution, year, grade });
             if (errors.length) {
                 Utils.toast(errors[0], 'error');
-                addBtn.disabled = false;
-                addBtn.innerHTML = 'Add Qualification';
                 return;
             }
 
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<span class="spinner"></span> ' + (editingQualId ? 'Updating...' : 'Adding...');
+
             try {
-                await DataService.addQualification({ degree, institution, year, grade });
-                $('#qualDegree').value = '';
-                $('#qualInstitution').value = '';
-                $('#qualYear').value = '';
-                $('#qualGrade').value = '';
+                if (editingQualId) {
+                    await DataService.updateQualification(editingQualId, { degree, institution, year, grade });
+                    Utils.toast('Qualification updated', 'success');
+                } else {
+                    await DataService.addQualification({ degree, institution, year, grade });
+                    Utils.toast('Qualification added', 'success');
+                }
+                resetForm();
                 await Dashboard.loadQualifications();
-                Utils.toast('Qualification added', 'success');
             } catch (err) {
                 Utils.toast(err.message || 'Something went wrong', 'error');
             } finally {
                 addBtn.disabled = false;
-                addBtn.innerHTML = 'Add Qualification';
+                addBtn.innerHTML = editingQualId ? 'Update Qualification' : 'Add Qualification';
             }
         });
     };

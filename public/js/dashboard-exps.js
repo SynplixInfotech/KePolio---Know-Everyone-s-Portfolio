@@ -6,6 +6,21 @@
     'use strict';
 
     const { $ } = Dashboard;
+    let editingExpId = null;
+
+    function resetForm() {
+        $('#expTitle').value = '';
+        $('#expCompany').value = '';
+        $('#expDuration').value = '';
+        $('#expDesc').value = '';
+        editingExpId = null;
+        const addBtn = $('#addExpBtn');
+        addBtn.innerHTML = 'Add Experience';
+    }
+
+    function cancelEdit() {
+        resetForm();
+    }
 
     Dashboard.loadExperiences = async function () {
         const exps = await DataService.getExperiences();
@@ -44,10 +59,27 @@
                     ${e.description ? `<div class="exp-row__desc">${Utils.escapeHTML(e.description)}</div>` : ''}
                 </div>
                 <div class="exp-row__actions">
+                    <button class="btn btn--secondary btn--small" data-edit-exp="${e.id}" title="Edit">✏️ Edit</button>
                     <button class="btn btn--danger btn--small" data-delete-exp="${e.id}">Delete</button>
                 </div>
             </div>
         `).join('');
+
+        list.querySelectorAll('[data-edit-exp]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const exp = exps.find(e => e.id === btn.dataset.editExp);
+                if (!exp) return;
+                editingExpId = exp.id;
+                $('#expTitle').value = exp.title;
+                $('#expCompany').value = exp.company;
+                $('#expDuration').value = exp.duration || '';
+                $('#expDesc').value = exp.description || '';
+                const addBtn = $('#addExpBtn');
+                addBtn.innerHTML = 'Update Experience';
+                addBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $('#expTitle').focus();
+            });
+        });
 
         Dashboard.attachInlineDelete({
             listEl: list,
@@ -63,8 +95,6 @@
         $('#addExpBtn')?.addEventListener('click', async () => {
             const addBtn = $('#addExpBtn');
             if (addBtn.disabled) return;
-            addBtn.disabled = true;
-            addBtn.innerHTML = '<span class="spinner"></span> Adding...';
 
             const title = $('#expTitle').value.trim();
             const company = $('#expCompany').value.trim();
@@ -74,24 +104,27 @@
             const errors = ValidationUtils.validateExperience({ title, company, duration, description });
             if (errors.length) {
                 Utils.toast(errors[0], 'error');
-                addBtn.disabled = false;
-                addBtn.innerHTML = 'Add Experience';
                 return;
             }
 
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<span class="spinner"></span> ' + (editingExpId ? 'Updating...' : 'Adding...');
+
             try {
-                await DataService.addExperience({ title, company, duration, description });
-                $('#expTitle').value = '';
-                $('#expCompany').value = '';
-                $('#expDuration').value = '';
-                $('#expDesc').value = '';
+                if (editingExpId) {
+                    await DataService.updateExperience(editingExpId, { title, company, duration, description });
+                    Utils.toast('Experience updated', 'success');
+                } else {
+                    await DataService.addExperience({ title, company, duration, description });
+                    Utils.toast('Experience added', 'success');
+                }
+                resetForm();
                 await Dashboard.loadExperiences();
-                Utils.toast('Experience added', 'success');
             } catch (err) {
                 Utils.toast(err.message || 'Something went wrong', 'error');
             } finally {
                 addBtn.disabled = false;
-                addBtn.innerHTML = 'Add Experience';
+                addBtn.innerHTML = editingExpId ? 'Update Experience' : 'Add Experience';
             }
         });
     };
