@@ -130,7 +130,8 @@
             } else {
                 const imgFile = $('#projImgInput')?.files[0];
                 if (imgFile) {
-                    previewUrl = await uploadProjectPreview(imgFile, user.uid, projectId);
+                    const uploaded = await uploadProjectPreview(imgFile, user.uid, projectId);
+                    previewUrl = uploaded + '?t=' + Date.now();
                 }
             }
 

@@ -67,7 +67,8 @@
             btn.disabled = true;
             try {
                 const user = await DataService.getUser();
-                const url = await uploadProfilePhoto(file, user.uid);
+                const uploaded = await uploadProfilePhoto(file, user.uid);
+                const url = uploaded + '?t=' + Date.now();
                 await DataService.updateUser({ photoURL: url });
                 const updated = await DataService.getUser();
                 updateAvatarPreview(updated);
