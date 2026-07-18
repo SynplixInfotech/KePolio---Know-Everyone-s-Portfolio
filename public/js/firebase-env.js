@@ -8,3 +8,7 @@ window.__FIREBASE_CONFIG__ = {
     "appId": "1:483331019592:web:d4f09c1bdbfc368a7b597d",
     "measurementId": "G-W7TNE7XSK0"
 };
+window.__CLOUDINARY_CONFIG__ = {
+    "cloudName": "ds1wxopgy",
+    "uploadPreset": "Case-V1"
+};

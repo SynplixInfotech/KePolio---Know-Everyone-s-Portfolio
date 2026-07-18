@@ -1,11 +1,16 @@
 // public/js/cloudinary.js
 // ─────────────────────────────────────────────────────
 //  Cloudinary upload helpers — profile photos + certificates
-//  Cloud name: ds1wxopgy  |  Preset: Case-V1 (unsigned)
+//  Reads keys from firebase-env.js (gitignored).
 // ─────────────────────────────────────────────────────
 
-const CLOUD_NAME    = 'ds1wxopgy';
-const UPLOAD_PRESET = 'Case-V1';
+const _cloudinaryFallback = {
+    cloudName: 'ds1wxopgy',
+    uploadPreset: 'Case-V1',
+};
+const _cc = window.__CLOUDINARY_CONFIG__ || _cloudinaryFallback;
+const CLOUD_NAME    = _cc.cloudName;
+const UPLOAD_PRESET = _cc.uploadPreset;
 
 const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
