@@ -43,6 +43,7 @@
     Dashboard.openAddProject = function () {
         state.editingProjectId = null;
         state.modalTags = [];
+        state.projectImgRemoved = false;
         $('#projectModalTitle').textContent = 'Add Project';
         $('#projName').value = '';
         $('#projDesc').value = '';
@@ -64,6 +65,7 @@
 
         state.editingProjectId = id;
         state.modalTags = [...(proj.techStack || [])];
+        state.projectImgRemoved = false;
         $('#projectModalTitle').textContent = 'Edit Project';
         $('#projName').value = proj.name;
         $('#projDesc').value = proj.description;
@@ -122,9 +124,14 @@
                 const existing = (await DataService.getProjects()).find(p => p.id === state.editingProjectId);
                 previewUrl = existing?.previewUrl || '';
             }
-            const imgFile = $('#projImgInput')?.files[0];
-            if (imgFile) {
-                previewUrl = await uploadProjectPreview(imgFile, user.uid, projectId);
+
+            if (state.projectImgRemoved) {
+                previewUrl = '';
+            } else {
+                const imgFile = $('#projImgInput')?.files[0];
+                if (imgFile) {
+                    previewUrl = await uploadProjectPreview(imgFile, user.uid, projectId);
+                }
             }
 
             if (state.editingProjectId) {
@@ -237,6 +244,7 @@
         });
         $('#projImgRemove')?.addEventListener('click', (e) => {
             e.stopPropagation();
+            state.projectImgRemoved = true;
             clearProjectImgPreview();
         });
     };
