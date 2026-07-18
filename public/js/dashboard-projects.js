@@ -241,6 +241,7 @@
         $('#projImgInput')?.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            state.projectImgRemoved = false;
             setProjectImgPreview(URL.createObjectURL(file));
         });
         $('#projImgRemove')?.addEventListener('click', (e) => {
